@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: generic-webapi
+    env: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: OPENAI_API_KEY
+        sync: false

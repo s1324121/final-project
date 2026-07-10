@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>先輩風・講義レビュー要約フィルター</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">generic-webapi + LLM JSON</p>
+            <h1>先輩風・講義レビュー</h1>
+        </div>
+    </header>
+
+    <main class="app-shell course-app">
+        <section class="course-input-panel">
+            <form id="courseForm" class="course-form">
+                <label>
+                    <span>講義名</span>
+                    <input id="courseNameInput" type="text" value="情報社会とデータ活用" placeholder="例: 経済学入門、統計学A、情報社会論">
+                </label>
+
+                <label>
+                    <span>学校名・大学名</span>
+                    <input id="schoolNameInput" type="text" placeholder="例: ○○大学、○○キャンパス">
+                </label>
+
+                <label>
+                    <span>シラバス・口コミ本文</span>
+                    <textarea id="courseTextInput" rows="12" placeholder="シラバスや先輩の口コミをそのまま貼り付けてください">毎回出席確認あり。授業内で小テストが数回ある。評価は期末試験60%、レポート20%、出席20%。試験は授業スライドから出るが範囲が広い。先輩の口コミでは、毎週のスライドを見直しておけば単位は取りやすいが、欠席が多いと厳しいとのこと。</textarea>
+                </label>
+
+                <div class="form-grid course-grid">
+                    <label>
+                        <span>重視条件</span>
+                        <select id="priorityInput">
+                            <option value="ラクさ重視">ラクさ重視</option>
+                            <option value="高評価狙い">高評価狙い</option>
+                            <option value="内容の面白さ重視">内容の面白さ重視</option>
+                            <option value="落単回避重視">落単回避重視</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>補足条件</span>
+                        <input id="conditionInput" type="text" placeholder="例: 朝が弱い、レポートが苦手">
+                    </label>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary-button" type="submit">貼り付け内容で分析</button>
+                    <button class="secondary-button" id="searchAnalyzeButton" type="button">口コミも検索して分析</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="course-result-panel">
+            <div class="loading" id="loading" hidden>LLMがシラバスと口コミを分析しています</div>
+            <div class="error" id="errorMessage" hidden></div>
+
+            <article class="course-report" aria-live="polite">
+                <div class="report-header">
+                    <div>
+                        <p class="report-label">COURSE REVIEW</p>
+                        <h2 id="resultCourseName">情報社会とデータ活用</h2>
+                    </div>
+                    <div class="score-ring" id="scoreRing">
+                        <strong id="overallScore">78</strong>
+                        <span>総合</span>
+                    </div>
+                </div>
+
+                <p id="summaryText" class="course-summary">出席と小テストの積み重ねが効く講義。期末試験は範囲が広いため、スライド復習を溜めないことが重要です。</p>
+
+                <section class="meter-grid" aria-label="講義の指標">
+                    <div class="meter-card">
+                        <div class="meter-head">
+                            <span>出席重要度</span>
+                            <strong id="attendanceLabel">高</strong>
+                        </div>
+                        <div class="meter"><span id="attendanceMeter"></span></div>
+                    </div>
+
+                    <div class="meter-card">
+                        <div class="meter-head">
+                            <span>レポート難易度</span>
+                            <strong id="reportLabel">中</strong>
+                        </div>
+                        <div class="meter"><span id="reportMeter"></span></div>
+                    </div>
+
+                    <div class="meter-card">
+                        <div class="meter-head">
+                            <span>試験難易度</span>
+                            <strong id="examLabel">高</strong>
+                        </div>
+                        <div class="meter"><span id="examMeter"></span></div>
+                    </div>
+
+                    <div class="meter-card risk-card">
+                        <div class="meter-head">
+                            <span>落単リスク</span>
+                            <strong id="riskLabel">35</strong>
+                        </div>
+                        <div class="meter"><span id="riskMeter"></span></div>
+                    </div>
+                </section>
+
+                <section class="strategy-panel">
+                    <h3>ここだけやればC以上は堅い</h3>
+                    <p id="gradeCStrategy">出席を切らさず、小テスト範囲と授業スライドの太字部分を試験前に復習する。</p>
+                </section>
+
+                <section class="list-panels">
+                    <div>
+                        <h3>必須ポイント</h3>
+                        <ul id="mustDoList"></ul>
+                    </div>
+                    <div>
+                        <h3>乗り切りTips</h3>
+                        <ul id="tipsList"></ul>
+                    </div>
+                </section>
+
+                <section class="caution-panel">
+                    <h3>注意</h3>
+                    <p id="cautionText">口コミの数が少ない場合は、初回授業で評価方法を必ず確認してください。</p>
+                </section>
+
+                <section class="evidence-panel" id="evidencePanel" hidden>
+                    <h3>AIが参考にした引用元</h3>
+                    <ul id="evidenceList"></ul>
+                </section>
+
+                <section class="source-panel" id="sourcePanel" hidden>
+                    <h3>検索で参照した口コミ候補</h3>
+                    <ul id="sourceList"></ul>
+                </section>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById('courseForm');
+        const searchAnalyzeButton = document.getElementById('searchAnalyzeButton');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+
+        const resultCourseName = document.getElementById('resultCourseName');
+        const overallScore = document.getElementById('overallScore');
+        const scoreRing = document.getElementById('scoreRing');
+        const summaryText = document.getElementById('summaryText');
+        const attendanceLabel = document.getElementById('attendanceLabel');
+        const reportLabel = document.getElementById('reportLabel');
+        const examLabel = document.getElementById('examLabel');
+        const riskLabel = document.getElementById('riskLabel');
+        const attendanceMeter = document.getElementById('attendanceMeter');
+        const reportMeter = document.getElementById('reportMeter');
+        const examMeter = document.getElementById('examMeter');
+        const riskMeter = document.getElementById('riskMeter');
+        const gradeCStrategy = document.getElementById('gradeCStrategy');
+        const mustDoList = document.getElementById('mustDoList');
+        const tipsList = document.getElementById('tipsList');
+        const cautionText = document.getElementById('cautionText');
+        const evidencePanel = document.getElementById('evidencePanel');
+        const evidenceList = document.getElementById('evidenceList');
+        const sourcePanel = document.getElementById('sourcePanel');
+        const sourceList = document.getElementById('sourceList');
+
+        const sampleResult = {
+            courseName: '情報社会とデータ活用',
+            overallScore: 78,
+            attendanceImportance: '高',
+            attendanceImportanceScore: 85,
+            reportDifficulty: '中',
+            reportDifficultyScore: 48,
+            examDifficulty: '高',
+            examDifficultyScore: 72,
+            riskScore: 35,
+            summary: '出席と小テストの積み重ねが効く講義。期末試験は範囲が広いため、スライド復習を溜めないことが重要です。',
+            gradeCStrategy: '出席を切らさず、小テスト範囲と授業スライドの太字部分を試験前に復習する。',
+            mustDoPoints: [
+                '出席確認がある回を落とさない',
+                '小テスト後に出題範囲をメモしておく',
+                '期末前にスライドを一気読みできる状態にする',
+            ],
+            survivalTips: [
+                '授業スライドを週ごとにフォルダ分けする',
+                '小テストの直後に出たテーマを一覧化する',
+                '初回授業で評価配分の変更がないか確認する',
+            ],
+            caution: '口コミは一部の先輩の体験に偏る可能性があります。最新年度の評価方法は初回授業で確認してください。',
+            evidenceSources: [
+                {
+                    sourceId: '[P1]',
+                    title: '貼り付けられたシラバス・口コミ本文',
+                    url: '',
+                    usedFor: '出席確認、評価配分、試験範囲に関する判断',
+                },
+            ],
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await analyzeCourse({ useSearch: false });
+        });
+
+        searchAnalyzeButton.addEventListener('click', async () => {
+            await analyzeCourse({ useSearch: true });
+        });
+
+        async function analyzeCourse({ useSearch }) {
+            const courseName = document.getElementById('courseNameInput').value.trim();
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+            const courseText = document.getElementById('courseTextInput').value.trim();
+            const priority = document.getElementById('priorityInput').value;
+            const condition = document.getElementById('conditionInput').value.trim() || '特になし';
+
+            if (!courseName || (!useSearch && courseText.length < 20)) {
+                showError('講義名と、20文字以上のシラバス・口コミ本文を入力してください。検索する場合は講義名だけでも使えます。');
+                return;
+            }
+
+            loading.hidden = false;
+            errorMessage.hidden = true;
+            evidencePanel.hidden = true;
+            sourcePanel.hidden = true;
+
+            try {
+                const reviews = useSearch ? await searchReviews(courseName, schoolName) : [];
+                const combinedCourseText = buildCourseText(courseText, reviews);
+
+                const response = await fetch('/api/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: `${courseName} 講義レビュー`,
+                        courseName,
+                        courseText: combinedCourseText,
+                        priority,
+                        condition,
+                        count: 1,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '講義分析に失敗しました。');
+                }
+
+                const payload = await response.json();
+                const parsed = JSON.parse(payload.rawData);
+                renderReport(parsed[0]);
+                renderSources(reviews);
+            } catch (error) {
+                renderReport(sampleResult);
+                showError('検索またはLLM APIに接続できないため、サンプル分析を表示しています。');
+            } finally {
+                loading.hidden = true;
+            }
+        }
+
+        async function searchReviews(courseName, schoolName) {
+            const params = new URLSearchParams({
+                courseName,
+                schoolName,
+            });
+            const response = await fetch(`/api/reviews?${params.toString()}`);
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '口コミ検索に失敗しました。');
+            }
+
+            const payload = await response.json();
+            return Array.isArray(payload.reviews) ? payload.reviews : [];
+        }
+
+        function buildCourseText(courseText, reviews) {
+            const searchText = reviews.map((review, index) => {
+                const sourceId = `[S${index + 1}]`;
+                return `${sourceId} ${review.title}\n${review.snippet}\nURL: ${review.link}`;
+            }).join('\n\n');
+
+            return [
+                courseText ? `【貼り付けられたシラバス・口コミ】\n[P1] ユーザー貼り付け本文\n${courseText}` : '',
+                searchText ? `【Web検索で見つかった口コミ候補】\n${searchText}` : '',
+            ].filter(Boolean).join('\n\n');
+        }
+
+        function renderSources(reviews) {
+            sourceList.innerHTML = '';
+
+            if (reviews.length === 0) {
+                sourcePanel.hidden = true;
+                return;
+            }
+
+            reviews.forEach((review) => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                const snippet = document.createElement('p');
+
+                link.href = review.link;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = review.title;
+                snippet.textContent = review.snippet || '抜粋なし';
+
+                li.appendChild(link);
+                li.appendChild(snippet);
+                sourceList.appendChild(li);
+            });
+
+            sourcePanel.hidden = false;
+        }
+
+        function renderReport(result) {
+            const data = normalizeResult(result);
+            const score = data.overallScore;
+
+            resultCourseName.textContent = data.courseName;
+            overallScore.textContent = score;
+            scoreRing.style.setProperty('--score', `${score}%`);
+            summaryText.textContent = data.summary;
+
+            attendanceLabel.textContent = data.attendanceImportance;
+            reportLabel.textContent = data.reportDifficulty;
+            examLabel.textContent = data.examDifficulty;
+            riskLabel.textContent = data.riskScore;
+
+            setMeter(attendanceMeter, data.attendanceImportanceScore);
+            setMeter(reportMeter, data.reportDifficultyScore);
+            setMeter(examMeter, data.examDifficultyScore);
+            setMeter(riskMeter, data.riskScore);
+
+            gradeCStrategy.textContent = data.gradeCStrategy;
+            renderList(mustDoList, data.mustDoPoints);
+            renderList(tipsList, data.survivalTips);
+            cautionText.textContent = data.caution;
+            renderEvidence(data.evidenceSources);
+        }
+
+        function normalizeResult(result) {
+            const source = result && typeof result === 'object' ? result : sampleResult;
+            return {
+                courseName: String(source.courseName || sampleResult.courseName),
+                overallScore: clampScore(source.overallScore),
+                attendanceImportance: normalizeChoice(source.attendanceImportance, ['高', '中', '低'], sampleResult.attendanceImportance),
+                attendanceImportanceScore: clampScore(source.attendanceImportanceScore),
+                reportDifficulty: normalizeChoice(source.reportDifficulty, ['高', '中', '低', '不明'], sampleResult.reportDifficulty),
+                reportDifficultyScore: clampScore(source.reportDifficultyScore),
+                examDifficulty: normalizeChoice(source.examDifficulty, ['高', '中', '低', '不明'], sampleResult.examDifficulty),
+                examDifficultyScore: clampScore(source.examDifficultyScore),
+                riskScore: clampScore(source.riskScore),
+                summary: String(source.summary || sampleResult.summary),
+                gradeCStrategy: String(source.gradeCStrategy || sampleResult.gradeCStrategy),
+                mustDoPoints: normalizeList(source.mustDoPoints, sampleResult.mustDoPoints),
+                survivalTips: normalizeList(source.survivalTips, sampleResult.survivalTips),
+                caution: String(source.caution || sampleResult.caution),
+                evidenceSources: normalizeEvidence(source.evidenceSources),
+            };
+        }
+
+        function normalizeEvidence(value) {
+            const list = Array.isArray(value) ? value : sampleResult.evidenceSources;
+            return list.slice(0, 5).map((source, index) => ({
+                sourceId: String(source.sourceId || `[E${index + 1}]`),
+                title: String(source.title || '出典タイトルなし'),
+                url: String(source.url || ''),
+                usedFor: String(source.usedFor || '分析根拠として使用'),
+            }));
+        }
+
+        function renderEvidence(sources) {
+            evidenceList.innerHTML = '';
+
+            if (!Array.isArray(sources) || sources.length === 0) {
+                evidencePanel.hidden = true;
+                return;
+            }
+
+            sources.forEach((source) => {
+                const li = document.createElement('li');
+                const head = document.createElement('div');
+                const usedFor = document.createElement('p');
+
+                head.className = 'evidence-head';
+                head.innerHTML = `<strong>${escapeHtml(source.sourceId)}</strong>`;
+
+                if (source.url) {
+                    const link = document.createElement('a');
+                    link.href = source.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = source.title;
+                    head.appendChild(link);
+                } else {
+                    const span = document.createElement('span');
+                    span.textContent = source.title;
+                    head.appendChild(span);
+                }
+
+                usedFor.textContent = source.usedFor;
+                li.appendChild(head);
+                li.appendChild(usedFor);
+                evidenceList.appendChild(li);
+            });
+
+            evidencePanel.hidden = false;
+        }
+
+        function normalizeList(value, fallback) {
+            const list = Array.isArray(value) ? value : fallback;
+            return list.slice(0, 3).map(item => String(item));
+        }
+
+        function normalizeChoice(value, allowed, fallback) {
+            return allowed.includes(value) ? value : fallback;
+        }
+
+        function clampScore(value) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return 0;
+            }
+            return Math.max(0, Math.min(100, Math.round(number)));
+        }
+
+        function setMeter(element, value) {
+            element.style.width = `${clampScore(value)}%`;
+        }
+
+        function renderList(element, items) {
+            element.innerHTML = '';
+            items.forEach((item) => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                element.appendChild(li);
+            });
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.hidden = false;
+        }
+
+        function escapeHtml(value) {
+            return value.replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            }[character]));
+        }
+
+        renderReport(sampleResult);
+    </script>
+</body>
+</html>
