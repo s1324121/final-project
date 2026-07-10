@@ -151,6 +151,10 @@ app.get('/api/reviews', async (req, res) => {
             return res.status(400).json({ error: 'courseName is required' });
         }
 
+        if (!schoolName) {
+            return res.status(400).json({ error: 'schoolName is required for review search' });
+        }
+
         const reviews = await searchCourseReviews(courseName, schoolName);
         res.json({
             courseName,
@@ -314,10 +318,11 @@ async function searchCourseReviews(courseName, schoolName) {
     const terms = [
         schoolName,
         courseName,
-        '講義',
-        '口コミ',
-        '授業評価',
         'シラバス',
+        '公式',
+        '講義',
+        '授業評価',
+        '口コミ',
     ].filter(Boolean).join(' ');
 
     const url = new URL('https://html.duckduckgo.com/html/');
@@ -334,7 +339,7 @@ async function searchCourseReviews(courseName, schoolName) {
     }
 
     const html = await response.text();
-    const results = parseSearchResults(html).slice(0, 5);
+    const results = rankSearchResults(parseSearchResults(html), courseName, schoolName).slice(0, 8);
     return Promise.all(results.map((result, index) => {
         return index < 3 ? enrichSearchResult(result) : result;
     }));
@@ -346,9 +351,9 @@ async function enrichSearchResult(result) {
     }
 
     const pageText = await fetchPageSummary(result.link);
-    return {
-        ...result,
-        snippet: pageText || result.snippet,
+        return {
+            ...result,
+            snippet: pageText || result.snippet,
     };
 }
 
@@ -400,8 +405,51 @@ function parseSearchResults(html) {
             title,
             snippet,
             link,
+            host: getUrlHost(link),
+            isOfficial: isOfficialSource(link, title, snippet),
+            isSyllabus: isSyllabusResult(title, snippet, link),
         };
     }).filter(result => result && result.title && result.link);
+}
+
+function rankSearchResults(results, courseName, schoolName) {
+    const courseKey = normalizeReviewKey(courseName);
+    const schoolKey = normalizeReviewKey(schoolName);
+
+    return results
+        .map((result) => {
+            const text = normalizeReviewKey(`${result.title} ${result.snippet} ${result.link}`);
+            const score = [
+                result.isOfficial ? 60 : 0,
+                result.isSyllabus ? 45 : 0,
+                schoolKey && text.includes(schoolKey) ? 30 : 0,
+                courseKey && text.includes(courseKey) ? 30 : 0,
+                result.host.endsWith('.ac.jp') ? 25 : 0,
+                result.host.includes('syllabus') ? 15 : 0,
+            ].reduce((sum, value) => sum + value, 0);
+            return { ...result, score };
+        })
+        .sort((a, b) => b.score - a.score);
+}
+
+function getUrlHost(link) {
+    try {
+        return new URL(link).hostname.replace(/^www\./, '');
+    } catch (error) {
+        return '';
+    }
+}
+
+function isOfficialSource(link, title, snippet) {
+    const host = getUrlHost(link);
+    const text = `${title} ${snippet} ${host}`;
+    return host.endsWith('.ac.jp')
+        || host.endsWith('.edu')
+        || /大学|university|公式|シラバス/i.test(text) && /ac\.jp|edu|syllabus/i.test(text);
+}
+
+function isSyllabusResult(title, snippet, link) {
+    return /シラバス|syllabus/i.test(`${title} ${snippet} ${link}`);
 }
 
 function normalizeSearchUrl(value) {

@@ -95,6 +95,7 @@ button {
 .course-input-panel,
 .course-report,
 .user-review-section,
+.search-candidate-panel,
 .loading,
 .error {
     border: 1px solid var(--line);
@@ -374,6 +375,69 @@ button {
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--shadow);
+}
+
+.search-candidate-panel {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.search-candidate-panel[hidden] {
+    display: none;
+}
+
+.candidate-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.search-candidate-list {
+    display: grid;
+    gap: 10px;
+}
+
+.search-candidate-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.search-candidate-item input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+}
+
+.search-candidate-item span {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.search-candidate-item strong {
+    color: var(--accent-strong);
+    overflow-wrap: anywhere;
+}
+
+.search-candidate-item small,
+.source-panel small {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.search-candidate-item p {
+    margin: 0;
+    color: #33414b;
+    font-size: 0.92rem;
 }
 
 .course-search-form {

@@ -58,7 +58,7 @@
 
                 <div class="button-row">
                     <button class="primary-button" type="submit">貼り付け内容で分析</button>
-                    <button class="secondary-button" id="searchAnalyzeButton" type="button">口コミも検索して分析</button>
+                    <button class="secondary-button" id="searchAnalyzeButton" type="button">検索候補を取得</button>
                 </div>
             </form>
 
@@ -127,6 +127,18 @@
                         <div id="compareResults" class="compare-results"></div>
                     </div>
                 </div>
+            </section>
+
+            <section class="search-candidate-panel" id="searchCandidatePanel" hidden>
+                <div class="section-title-row">
+                    <div>
+                        <p class="mini-label">SOURCE SELECT</p>
+                        <h2>AIが読む出典を選ぶ</h2>
+                    </div>
+                    <button class="primary-button compact-button" id="analyzeSelectedSourcesButton" type="button">選んだ出典で分析</button>
+                </div>
+                <p class="candidate-note">公式シラバス候補を上に表示します。関係ないページはチェックを外してください。</p>
+                <div id="searchCandidateList" class="search-candidate-list"></div>
             </section>
 
             <section class="user-review-section">
@@ -320,6 +332,7 @@
         const userReviewForm = document.getElementById('userReviewForm');
         const courseSearchForm = document.getElementById('courseSearchForm');
         const searchAnalyzeButton = document.getElementById('searchAnalyzeButton');
+        const analyzeSelectedSourcesButton = document.getElementById('analyzeSelectedSourcesButton');
         const recommendButton = document.getElementById('recommendButton');
         const compareButton = document.getElementById('compareButton');
         const loading = document.getElementById('loading');
@@ -336,6 +349,8 @@
         const recommendationList = document.getElementById('recommendationList');
         const compareList = document.getElementById('compareList');
         const compareResults = document.getElementById('compareResults');
+        const searchCandidatePanel = document.getElementById('searchCandidatePanel');
+        const searchCandidateList = document.getElementById('searchCandidateList');
 
         const resultCourseName = document.getElementById('resultCourseName');
         const overallScore = document.getElementById('overallScore');
@@ -358,6 +373,7 @@
         const sourcePanel = document.getElementById('sourcePanel');
         const sourceList = document.getElementById('sourceList');
         const compareCourses = [];
+        let searchCandidateReviews = [];
         const userId = getOrCreateUserId();
 
         const sampleResult = {
@@ -416,7 +432,11 @@
         });
 
         searchAnalyzeButton.addEventListener('click', async () => {
-            await analyzeCourse({ useSearch: true });
+            await loadSearchCandidates();
+        });
+
+        analyzeSelectedSourcesButton.addEventListener('click', async () => {
+            await analyzeSelectedSources();
         });
 
         recommendButton.addEventListener('click', loadRecommendations);
@@ -425,7 +445,7 @@
         document.getElementById('courseNameInput').addEventListener('change', loadUserReviews);
         document.getElementById('schoolNameInput').addEventListener('change', loadUserReviews);
 
-        async function analyzeCourse({ useSearch }) {
+        async function analyzeCourse({ useSearch, selectedSearchReviews = [] }) {
             const courseName = document.getElementById('courseNameInput').value.trim();
             const schoolName = document.getElementById('schoolNameInput').value.trim();
             const courseText = document.getElementById('courseTextInput').value.trim();
@@ -433,7 +453,12 @@
             const condition = document.getElementById('conditionInput').value.trim() || '特になし';
 
             if (!courseName || (!useSearch && courseText.length < 20)) {
-                showError('講義名と、20文字以上のシラバス・口コミ本文を入力してください。検索する場合は講義名だけでも使えます。');
+                showError('講義名と20文字以上のシラバス・口コミ本文を入力してください。');
+                return;
+            }
+
+            if (useSearch && !schoolName) {
+                showError('検索して分析する場合は、学校名・大学名を入力してください。');
                 return;
             }
 
@@ -445,8 +470,13 @@
             try {
                 const savedReviewPayload = await fetchUserReviewPayload(courseName, schoolName);
                 const savedReviews = savedReviewPayload.reviews;
-                const searchReviewsList = useSearch ? await searchReviews(courseName, schoolName) : [];
+                const searchReviewsList = useSearch ? selectedSearchReviews : [];
                 const combinedCourseText = buildCourseText(courseText, searchReviewsList, savedReviews);
+
+                if (useSearch && searchReviewsList.length === 0 && savedReviews.length === 0 && !courseText) {
+                    showError('分析に使う出典が選ばれていません。候補を選ぶか、本文を貼り付けてください。');
+                    return;
+                }
 
                 const response = await fetch('/api/', {
                     method: 'POST',
@@ -474,14 +504,17 @@
                 renderSources(searchReviewsList);
                 renderUserReviews(savedReviews, savedReviewPayload.stats);
             } catch (error) {
-                renderReport(sampleResult);
-                showError('検索またはLLM APIに接続できないため、サンプル分析を表示しています。');
+                showError(error.message || '分析に失敗しました。出典やAPI設定を確認してください。');
             } finally {
                 loading.hidden = true;
             }
         }
 
         async function searchReviews(courseName, schoolName) {
+            if (!schoolName) {
+                throw new Error('検索には学校名・大学名が必要です。');
+            }
+
             const params = new URLSearchParams({
                 courseName,
                 schoolName,
@@ -495,6 +528,83 @@
 
             const payload = await response.json();
             return Array.isArray(payload.reviews) ? payload.reviews : [];
+        }
+
+        async function loadSearchCandidates() {
+            const courseName = document.getElementById('courseNameInput').value.trim();
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+
+            if (!courseName || !schoolName) {
+                showError('検索候補を取得するには、講義名と学校名・大学名を入力してください。');
+                return;
+            }
+
+            loading.hidden = false;
+            errorMessage.hidden = true;
+            searchCandidatePanel.hidden = true;
+
+            try {
+                searchCandidateReviews = await searchReviews(courseName, schoolName);
+                renderSearchCandidates(searchCandidateReviews);
+                if (searchCandidateReviews.length === 0) {
+                    showError('検索候補が見つかりませんでした。本文を貼り付けて分析してください。');
+                }
+            } catch (error) {
+                searchCandidateReviews = [];
+                renderSearchCandidates([]);
+                showError(error.message || '検索候補を取得できませんでした。');
+            } finally {
+                loading.hidden = true;
+            }
+        }
+
+        async function analyzeSelectedSources() {
+            const selectedReviews = getSelectedSearchCandidates();
+            if (selectedReviews.length === 0) {
+                showError('AIに読ませる出典を1件以上選んでください。');
+                return;
+            }
+
+            await analyzeCourse({ useSearch: true, selectedSearchReviews: selectedReviews });
+        }
+
+        function getSelectedSearchCandidates() {
+            return Array.from(searchCandidateList.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(input => searchCandidateReviews[Number(input.value)])
+                .filter(Boolean);
+        }
+
+        function renderSearchCandidates(reviews) {
+            searchCandidateList.innerHTML = '';
+            searchCandidatePanel.hidden = reviews.length === 0;
+
+            reviews.forEach((review, index) => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                const content = document.createElement('span');
+                const title = document.createElement('strong');
+                const meta = document.createElement('small');
+                const snippet = document.createElement('p');
+
+                label.className = 'search-candidate-item';
+                checkbox.type = 'checkbox';
+                checkbox.value = String(index);
+                checkbox.checked = index < 3 || review.isOfficial || review.isSyllabus;
+                title.textContent = review.title || 'タイトルなし';
+                meta.textContent = [
+                    review.host || getHostFromUrl(review.link),
+                    review.isOfficial ? '公式候補' : '',
+                    review.isSyllabus ? 'シラバス候補' : '',
+                ].filter(Boolean).join(' / ');
+                snippet.textContent = review.snippet || '抜粋なし';
+
+                content.appendChild(title);
+                content.appendChild(meta);
+                content.appendChild(snippet);
+                label.appendChild(checkbox);
+                label.appendChild(content);
+                searchCandidateList.appendChild(label);
+            });
         }
 
         async function fetchUserReviewPayload(courseName, schoolName) {
@@ -611,15 +721,22 @@
             reviews.forEach((review) => {
                 const li = document.createElement('li');
                 const link = document.createElement('a');
+                const meta = document.createElement('small');
                 const snippet = document.createElement('p');
 
                 link.href = review.link;
                 link.target = '_blank';
                 link.rel = 'noopener noreferrer';
                 link.textContent = review.title;
+                meta.textContent = [
+                    review.host || getHostFromUrl(review.link),
+                    review.isOfficial ? '公式候補' : '',
+                    review.isSyllabus ? 'シラバス候補' : '',
+                ].filter(Boolean).join(' / ');
                 snippet.textContent = review.snippet || '抜粋なし';
 
                 li.appendChild(link);
+                li.appendChild(meta);
                 li.appendChild(snippet);
                 sourceList.appendChild(li);
             });
@@ -878,6 +995,14 @@
 
         function formatRating(value) {
             return clampRating(value).toFixed(1);
+        }
+
+        function getHostFromUrl(value) {
+            try {
+                return new URL(value).hostname.replace(/^www\./, '');
+            } catch (error) {
+                return '';
+            }
         }
 
         function renderReviewStats(stats) {
