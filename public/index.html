@@ -12,6 +12,13 @@
             <p class="eyebrow">generic-webapi + LLM JSON</p>
             <h1>先輩風・講義レビュー</h1>
         </div>
+        <form id="loginForm" class="login-form">
+            <label>
+                <span>表示名</span>
+                <input id="loginNameInput" type="text" placeholder="例: 3年 情報学部">
+            </label>
+            <button class="secondary-button" type="submit">保存</button>
+        </form>
     </header>
 
     <main class="app-shell course-app">
@@ -54,11 +61,176 @@
                     <button class="secondary-button" id="searchAnalyzeButton" type="button">口コミも検索して分析</button>
                 </div>
             </form>
+
         </section>
 
         <section class="course-result-panel">
             <div class="loading" id="loading" hidden>LLMがシラバスと口コミを分析しています</div>
             <div class="error" id="errorMessage" hidden></div>
+
+            <section class="course-tools">
+                <div class="tool-panel">
+                    <div class="section-title-row">
+                        <div>
+                            <p class="mini-label">COURSE SEARCH</p>
+                            <h2>講義を探す</h2>
+                        </div>
+                    </div>
+
+                    <form id="courseSearchForm" class="course-search-form">
+                        <input id="courseSearchInput" type="search" placeholder="講義名・大学名で検索">
+                        <select id="searchMinRatingInput">
+                            <option value="0">評価指定なし</option>
+                            <option value="3">3.0以上</option>
+                            <option value="4">4.0以上</option>
+                        </select>
+                        <select id="searchDifficultyInput">
+                            <option value="">難易度指定なし</option>
+                            <option value="低">低</option>
+                            <option value="中">中</option>
+                            <option value="高">高</option>
+                            <option value="不明">不明</option>
+                        </select>
+                        <select id="searchSortInput">
+                            <option value="rating">評価順</option>
+                            <option value="easy">ラクさ順</option>
+                            <option value="popular">投稿数順</option>
+                            <option value="recent">新着順</option>
+                        </select>
+                        <button class="secondary-button" type="submit">検索</button>
+                    </form>
+
+                    <div id="courseSearchResults" class="course-card-list"></div>
+                </div>
+
+                <div class="tool-grid">
+                    <div class="tool-panel">
+                        <div class="section-title-row">
+                            <div>
+                                <p class="mini-label">RECOMMEND</p>
+                                <h2>おすすめ</h2>
+                            </div>
+                            <button class="secondary-button compact-button" id="recommendButton" type="button">更新</button>
+                        </div>
+                        <div id="recommendationList" class="course-card-list compact-list"></div>
+                    </div>
+
+                    <div class="tool-panel">
+                        <div class="section-title-row">
+                            <div>
+                                <p class="mini-label">COMPARE</p>
+                                <h2>講義比較</h2>
+                            </div>
+                            <button class="secondary-button compact-button" id="compareButton" type="button">比較</button>
+                        </div>
+                        <div id="compareList" class="compare-list"></div>
+                        <div id="compareResults" class="compare-results"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="user-review-section">
+                <div class="section-title-row">
+                    <div>
+                        <p class="mini-label">USER REVIEWS</p>
+                        <h2>利用者の口コミ</h2>
+                    </div>
+                    <span id="userReviewCount">0件</span>
+                </div>
+
+                <div class="review-stats" aria-label="口コミの集計">
+                    <div>
+                        <span>平均評価</span>
+                        <strong id="averageRatingText">0.0</strong>
+                    </div>
+                    <div>
+                        <span>投稿数</span>
+                        <strong id="reviewTotalText">0</strong>
+                    </div>
+                    <div>
+                        <span>難易度傾向</span>
+                        <strong id="difficultyTrendText">不明</strong>
+                    </div>
+                    <div>
+                        <span>出席傾向</span>
+                        <strong id="attendanceTrendText">不明</strong>
+                    </div>
+                </div>
+
+                <form id="userReviewForm" class="user-review-form">
+                    <label>
+                        <span>名前</span>
+                        <input id="reviewerNameInput" type="text" placeholder="匿名でもOK">
+                    </label>
+
+                    <div class="review-grid">
+                        <label>
+                            <span>総合評価</span>
+                            <select id="reviewRatingInput">
+                                <option value="5">5 とてもおすすめ</option>
+                                <option value="4">4 おすすめ</option>
+                                <option value="3">3 普通</option>
+                                <option value="2">2 やや厳しい</option>
+                                <option value="1">1 厳しい</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            <span>難易度</span>
+                            <select id="reviewDifficultyInput">
+                                <option value="中">中</option>
+                                <option value="低">低</option>
+                                <option value="高">高</option>
+                                <option value="不明">不明</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>
+                        <span>出席重要度</span>
+                        <select id="reviewAttendanceInput">
+                            <option value="中">中</option>
+                            <option value="低">低</option>
+                            <option value="高">高</option>
+                            <option value="不明">不明</option>
+                        </select>
+                    </label>
+
+                    <div class="review-grid">
+                        <label>
+                            <span>年度</span>
+                            <input id="reviewYearInput" type="number" min="2000" max="2100" placeholder="例: 2026">
+                        </label>
+
+                        <label>
+                            <span>学期</span>
+                            <select id="reviewTermInput">
+                                <option value="不明">不明</option>
+                                <option value="春">春</option>
+                                <option value="夏">夏</option>
+                                <option value="秋">秋</option>
+                                <option value="冬">冬</option>
+                                <option value="通年">通年</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>
+                        <span>担当教員</span>
+                        <input id="reviewInstructorInput" type="text" placeholder="例: 山田先生">
+                    </label>
+
+                    <label>
+                        <span>口コミ本文</span>
+                        <textarea id="reviewTextInput" rows="5" maxlength="1200" placeholder="授業の進め方、課題、試験、出席、単位の取りやすさなど"></textarea>
+                    </label>
+
+                    <button class="primary-button" type="submit">口コミを投稿</button>
+                    <p class="review-status" id="reviewStatus" hidden></p>
+                </form>
+
+                <div class="user-review-list" id="userReviewList"></div>
+            </section>
 
             <article class="course-report" aria-live="polite">
                 <div class="report-header">
@@ -144,9 +316,26 @@
 
     <script>
         const form = document.getElementById('courseForm');
+        const loginForm = document.getElementById('loginForm');
+        const userReviewForm = document.getElementById('userReviewForm');
+        const courseSearchForm = document.getElementById('courseSearchForm');
         const searchAnalyzeButton = document.getElementById('searchAnalyzeButton');
+        const recommendButton = document.getElementById('recommendButton');
+        const compareButton = document.getElementById('compareButton');
         const loading = document.getElementById('loading');
         const errorMessage = document.getElementById('errorMessage');
+        const reviewStatus = document.getElementById('reviewStatus');
+        const userReviewCount = document.getElementById('userReviewCount');
+        const userReviewList = document.getElementById('userReviewList');
+        const averageRatingText = document.getElementById('averageRatingText');
+        const reviewTotalText = document.getElementById('reviewTotalText');
+        const difficultyTrendText = document.getElementById('difficultyTrendText');
+        const attendanceTrendText = document.getElementById('attendanceTrendText');
+        const loginNameInput = document.getElementById('loginNameInput');
+        const courseSearchResults = document.getElementById('courseSearchResults');
+        const recommendationList = document.getElementById('recommendationList');
+        const compareList = document.getElementById('compareList');
+        const compareResults = document.getElementById('compareResults');
 
         const resultCourseName = document.getElementById('resultCourseName');
         const overallScore = document.getElementById('overallScore');
@@ -168,6 +357,8 @@
         const evidenceList = document.getElementById('evidenceList');
         const sourcePanel = document.getElementById('sourcePanel');
         const sourceList = document.getElementById('sourceList');
+        const compareCourses = [];
+        const userId = getOrCreateUserId();
 
         const sampleResult = {
             courseName: '情報社会とデータ活用',
@@ -207,9 +398,32 @@
             await analyzeCourse({ useSearch: false });
         });
 
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            localStorage.setItem('reviewerName', loginNameInput.value.trim());
+            syncLoginName();
+            showReviewStatus('表示名を保存しました。', false);
+        });
+
+        userReviewForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await submitUserReview();
+        });
+
+        courseSearchForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await loadCourses();
+        });
+
         searchAnalyzeButton.addEventListener('click', async () => {
             await analyzeCourse({ useSearch: true });
         });
+
+        recommendButton.addEventListener('click', loadRecommendations);
+        compareButton.addEventListener('click', compareSelectedCourses);
+
+        document.getElementById('courseNameInput').addEventListener('change', loadUserReviews);
+        document.getElementById('schoolNameInput').addEventListener('change', loadUserReviews);
 
         async function analyzeCourse({ useSearch }) {
             const courseName = document.getElementById('courseNameInput').value.trim();
@@ -229,8 +443,10 @@
             sourcePanel.hidden = true;
 
             try {
-                const reviews = useSearch ? await searchReviews(courseName, schoolName) : [];
-                const combinedCourseText = buildCourseText(courseText, reviews);
+                const savedReviewPayload = await fetchUserReviewPayload(courseName, schoolName);
+                const savedReviews = savedReviewPayload.reviews;
+                const searchReviewsList = useSearch ? await searchReviews(courseName, schoolName) : [];
+                const combinedCourseText = buildCourseText(courseText, searchReviewsList, savedReviews);
 
                 const response = await fetch('/api/', {
                     method: 'POST',
@@ -255,7 +471,8 @@
                 const payload = await response.json();
                 const parsed = JSON.parse(payload.rawData);
                 renderReport(parsed[0]);
-                renderSources(reviews);
+                renderSources(searchReviewsList);
+                renderUserReviews(savedReviews, savedReviewPayload.stats);
             } catch (error) {
                 renderReport(sampleResult);
                 showError('検索またはLLM APIに接続できないため、サンプル分析を表示しています。');
@@ -280,14 +497,105 @@
             return Array.isArray(payload.reviews) ? payload.reviews : [];
         }
 
-        function buildCourseText(courseText, reviews) {
+        async function fetchUserReviewPayload(courseName, schoolName) {
+            const params = new URLSearchParams({
+                courseName,
+                schoolName,
+            });
+            const response = await fetch(`/api/user-reviews?${params.toString()}`);
+
+            if (!response.ok) {
+                return { reviews: [], stats: emptyReviewStats() };
+            }
+
+            const payload = await response.json();
+            return {
+                reviews: Array.isArray(payload.reviews) ? payload.reviews : [],
+                stats: normalizeReviewStats(payload.stats),
+            };
+        }
+
+        async function submitUserReview() {
+            const courseName = document.getElementById('courseNameInput').value.trim();
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+            const reviewerName = document.getElementById('reviewerNameInput').value.trim();
+            const rating = Number(document.getElementById('reviewRatingInput').value);
+            const difficulty = document.getElementById('reviewDifficultyInput').value;
+            const attendance = document.getElementById('reviewAttendanceInput').value;
+            const year = document.getElementById('reviewYearInput').value;
+            const term = document.getElementById('reviewTermInput').value;
+            const instructor = document.getElementById('reviewInstructorInput').value.trim();
+            const text = document.getElementById('reviewTextInput').value.trim();
+
+            if (!courseName || text.length < 10) {
+                showReviewStatus('講義名と10文字以上の口コミ本文を入力してください。', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user-reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        courseName,
+                        schoolName,
+                        reviewerName,
+                        rating,
+                        difficulty,
+                        attendance,
+                        year,
+                        term,
+                        instructor,
+                        userId,
+                        text,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '口コミを保存できませんでした。');
+                }
+
+                userReviewForm.reset();
+                syncLoginName();
+                showReviewStatus('口コミを保存しました。', false);
+                await loadUserReviews();
+                await loadCourses();
+                await loadRecommendations();
+            } catch (error) {
+                showReviewStatus(error.message || '口コミを保存できませんでした。', true);
+            }
+        }
+
+        async function loadUserReviews() {
+            const courseName = document.getElementById('courseNameInput').value.trim();
+            const schoolName = document.getElementById('schoolNameInput').value.trim();
+            if (!courseName) {
+                renderUserReviews([], emptyReviewStats());
+                return;
+            }
+
+            const payload = await fetchUserReviewPayload(courseName, schoolName);
+            renderUserReviews(payload.reviews, payload.stats);
+        }
+
+        function buildCourseText(courseText, reviews, savedReviews) {
             const searchText = reviews.map((review, index) => {
                 const sourceId = `[S${index + 1}]`;
                 return `${sourceId} ${review.title}\n${review.snippet}\nURL: ${review.link}`;
             }).join('\n\n');
 
+            const userReviewText = savedReviews.map((review, index) => {
+                const sourceId = `[U${index + 1}]`;
+                const detail = [review.year, review.term, review.instructor].filter(Boolean).join(' / ');
+                return `${sourceId} ${review.reviewerName} 評価${review.rating}/5 難易度:${review.difficulty} 出席:${review.attendance}${detail ? ` ${detail}` : ''}\n${review.text}`;
+            }).join('\n\n');
+
             return [
                 courseText ? `【貼り付けられたシラバス・口コミ】\n[P1] ユーザー貼り付け本文\n${courseText}` : '',
+                userReviewText ? `【このアプリに保存された利用者口コミ】\n${userReviewText}` : '',
                 searchText ? `【Web検索で見つかった口コミ候補】\n${searchText}` : '',
             ].filter(Boolean).join('\n\n');
         }
@@ -317,6 +625,302 @@
             });
 
             sourcePanel.hidden = false;
+        }
+
+        function renderUserReviews(reviews, stats = emptyReviewStats()) {
+            renderReviewStats(stats);
+            const normalizedStats = normalizeReviewStats(stats);
+            userReviewList.innerHTML = '';
+            userReviewCount.textContent = `${normalizedStats.count}件`;
+
+            if (reviews.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'empty-reviews';
+                empty.textContent = 'この講義の口コミはまだありません。';
+                userReviewList.appendChild(empty);
+                return;
+            }
+
+            reviews.forEach((review) => {
+                const article = document.createElement('article');
+                const header = document.createElement('div');
+                const meta = document.createElement('p');
+                const text = document.createElement('p');
+                const actions = document.createElement('div');
+                const helpfulButton = document.createElement('button');
+                const reportButton = document.createElement('button');
+                const deleteButton = document.createElement('button');
+
+                article.className = 'user-review-item';
+                header.className = 'user-review-head';
+                header.innerHTML = `<strong>${escapeHtml(review.reviewerName || '匿名')}</strong><span>${'★'.repeat(Number(review.rating) || 0)}</span>`;
+                meta.textContent = [
+                    formatReviewDate(review.createdAt),
+                    review.year || '',
+                    review.term || '',
+                    review.instructor || '',
+                    `難易度 ${review.difficulty || '不明'}`,
+                    `出席 ${review.attendance || '不明'}`,
+                ].filter(Boolean).join(' / ');
+                text.textContent = review.text || '';
+                actions.className = 'review-actions';
+                helpfulButton.type = 'button';
+                helpfulButton.textContent = `役に立った ${Number(review.helpfulCount || 0)}`;
+                helpfulButton.addEventListener('click', () => updateReviewAction(review.id, 'helpful'));
+                reportButton.type = 'button';
+                reportButton.textContent = `通報 ${Number(review.reportCount || 0)}`;
+                reportButton.addEventListener('click', () => updateReviewAction(review.id, 'report'));
+                deleteButton.type = 'button';
+                deleteButton.textContent = '削除';
+                deleteButton.addEventListener('click', () => deleteReview(review.id));
+
+                article.appendChild(header);
+                article.appendChild(meta);
+                article.appendChild(text);
+                actions.appendChild(helpfulButton);
+                actions.appendChild(reportButton);
+                actions.appendChild(deleteButton);
+                article.appendChild(actions);
+                userReviewList.appendChild(article);
+            });
+        }
+
+        async function updateReviewAction(id, action) {
+            const response = await fetch(`/api/user-reviews/${encodeURIComponent(id)}/${action}`, {
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                showReviewStatus('口コミを更新できませんでした。', true);
+                return;
+            }
+
+            await loadUserReviews();
+            await loadCourses();
+        }
+
+        async function deleteReview(id) {
+            const token = window.prompt('管理者トークンを入力してください。');
+            if (!token) {
+                return;
+            }
+
+            const response = await fetch(`/api/user-reviews/${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: {
+                    'x-admin-token': token,
+                },
+            });
+
+            if (!response.ok) {
+                showReviewStatus('削除できませんでした。管理者トークンを確認してください。', true);
+                return;
+            }
+
+            showReviewStatus('口コミを削除しました。', false);
+            await loadUserReviews();
+            await loadCourses();
+        }
+
+        async function loadCourses() {
+            const params = new URLSearchParams({
+                q: document.getElementById('courseSearchInput').value.trim(),
+                minRating: document.getElementById('searchMinRatingInput').value,
+                difficulty: document.getElementById('searchDifficultyInput').value,
+                sort: document.getElementById('searchSortInput').value,
+            });
+            const response = await fetch(`/api/courses?${params.toString()}`);
+            const payload = response.ok ? await response.json() : { courses: [] };
+            renderCourseCards(courseSearchResults, payload.courses || [], { allowCompare: true });
+        }
+
+        async function loadRecommendations() {
+            const priority = document.getElementById('priorityInput').value;
+            const response = await fetch(`/api/recommendations?priority=${encodeURIComponent(priority)}`);
+            const payload = response.ok ? await response.json() : { courses: [] };
+            renderCourseCards(recommendationList, payload.courses || [], { allowCompare: true });
+        }
+
+        function renderCourseCards(container, courses, options = {}) {
+            container.innerHTML = '';
+
+            if (courses.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'empty-reviews';
+                empty.textContent = '該当する講義はまだありません。';
+                container.appendChild(empty);
+                return;
+            }
+
+            courses.forEach((course) => {
+                const card = document.createElement('article');
+                const title = document.createElement('button');
+                const meta = document.createElement('p');
+                const stats = document.createElement('p');
+                const actions = document.createElement('div');
+
+                card.className = 'course-card';
+                title.type = 'button';
+                title.className = 'course-card-title';
+                title.textContent = course.courseName;
+                title.addEventListener('click', () => selectCourse(course));
+                meta.textContent = course.schoolName || '大学名未設定';
+                stats.textContent = `平均${formatRating(course.stats?.averageRating)} / ${course.stats?.count || 0}件 / 難易度${course.stats?.difficultyTrend || '不明'} / 出席${course.stats?.attendanceTrend || '不明'}`;
+                actions.className = 'review-actions';
+
+                if (options.allowCompare) {
+                    const compareButton = document.createElement('button');
+                    compareButton.type = 'button';
+                    compareButton.textContent = '比較に追加';
+                    compareButton.addEventListener('click', () => addCompareCourse(course));
+                    actions.appendChild(compareButton);
+                }
+
+                card.appendChild(title);
+                card.appendChild(meta);
+                card.appendChild(stats);
+                card.appendChild(actions);
+                container.appendChild(card);
+            });
+        }
+
+        async function selectCourse(course) {
+            document.getElementById('courseNameInput').value = course.courseName || '';
+            document.getElementById('schoolNameInput').value = course.schoolName || '';
+            resultCourseName.textContent = course.courseName || sampleResult.courseName;
+            await loadUserReviews();
+        }
+
+        function addCompareCourse(course) {
+            const key = `${course.courseName}::${course.schoolName || ''}`;
+            if (compareCourses.some(item => `${item.courseName}::${item.schoolName || ''}` === key)) {
+                return;
+            }
+
+            if (compareCourses.length >= 4) {
+                compareCourses.shift();
+            }
+
+            compareCourses.push({
+                courseName: course.courseName,
+                schoolName: course.schoolName || '',
+            });
+            renderCompareList();
+        }
+
+        function renderCompareList() {
+            compareList.innerHTML = '';
+
+            if (compareCourses.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'empty-reviews';
+                empty.textContent = '比較する講義を追加してください。';
+                compareList.appendChild(empty);
+                return;
+            }
+
+            compareCourses.forEach((course, index) => {
+                const row = document.createElement('div');
+                const text = document.createElement('span');
+                const remove = document.createElement('button');
+                row.className = 'compare-row';
+                text.textContent = `${course.courseName}${course.schoolName ? ` / ${course.schoolName}` : ''}`;
+                remove.type = 'button';
+                remove.textContent = '外す';
+                remove.addEventListener('click', () => {
+                    compareCourses.splice(index, 1);
+                    renderCompareList();
+                });
+                row.appendChild(text);
+                row.appendChild(remove);
+                compareList.appendChild(row);
+            });
+        }
+
+        async function compareSelectedCourses() {
+            if (compareCourses.length === 0) {
+                renderCompareList();
+                return;
+            }
+
+            const response = await fetch('/api/compare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ courses: compareCourses }),
+            });
+            const payload = response.ok ? await response.json() : { courses: [] };
+            compareResults.innerHTML = '';
+            (payload.courses || []).forEach((course) => {
+                const row = document.createElement('div');
+                row.className = 'compare-result-row';
+                row.textContent = `${course.courseName}: 平均${formatRating(course.stats.averageRating)} / ${course.stats.count}件 / 難易度${course.stats.difficultyTrend} / 出席${course.stats.attendanceTrend}`;
+                compareResults.appendChild(row);
+            });
+        }
+
+        function syncLoginName() {
+            const savedName = localStorage.getItem('reviewerName') || '';
+            loginNameInput.value = savedName;
+            document.getElementById('reviewerNameInput').value = savedName;
+        }
+
+        function getOrCreateUserId() {
+            const existing = localStorage.getItem('reviewUserId');
+            if (existing) {
+                return existing;
+            }
+            const generated = `user-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            localStorage.setItem('reviewUserId', generated);
+            return generated;
+        }
+
+        function formatRating(value) {
+            return clampRating(value).toFixed(1);
+        }
+
+        function renderReviewStats(stats) {
+            const data = normalizeReviewStats(stats);
+            averageRatingText.textContent = data.averageRating.toFixed(1);
+            reviewTotalText.textContent = String(data.count);
+            difficultyTrendText.textContent = data.difficultyTrend;
+            attendanceTrendText.textContent = data.attendanceTrend;
+        }
+
+        function normalizeReviewStats(stats) {
+            const source = stats && typeof stats === 'object' ? stats : {};
+            return {
+                count: clampCount(source.count),
+                averageRating: clampRating(source.averageRating),
+                averageRatingPercent: clampScore(source.averageRatingPercent),
+                difficultyTrend: String(source.difficultyTrend || '不明'),
+                attendanceTrend: String(source.attendanceTrend || '不明'),
+            };
+        }
+
+        function emptyReviewStats() {
+            return {
+                count: 0,
+                averageRating: 0,
+                averageRatingPercent: 0,
+                difficultyTrend: '不明',
+                attendanceTrend: '不明',
+            };
+        }
+
+        function showReviewStatus(message, isError) {
+            reviewStatus.textContent = message;
+            reviewStatus.classList.toggle('is-error', isError);
+            reviewStatus.hidden = false;
+        }
+
+        function formatReviewDate(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return '日付不明';
+            }
+            return date.toLocaleDateString('ja-JP');
         }
 
         function renderReport(result) {
@@ -431,6 +1035,22 @@
             return Math.max(0, Math.min(100, Math.round(number)));
         }
 
+        function clampRating(value) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return 0;
+            }
+            return Math.max(0, Math.min(5, Math.round(number * 10) / 10));
+        }
+
+        function clampCount(value) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return 0;
+            }
+            return Math.max(0, Math.round(number));
+        }
+
         function setMeter(element, value) {
             element.style.width = `${clampScore(value)}%`;
         }
@@ -459,7 +1079,12 @@
             }[character]));
         }
 
+        syncLoginName();
         renderReport(sampleResult);
+        renderCompareList();
+        loadUserReviews();
+        loadCourses();
+        loadRecommendations();
     </script>
 </body>
 </html>

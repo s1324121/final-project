@@ -41,9 +41,28 @@ button {
 }
 
 .topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
     max-width: 1180px;
     margin: 0 auto;
     padding: 30px 24px 18px;
+}
+
+.login-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) auto;
+    align-items: end;
+    gap: 10px;
+}
+
+.login-form label {
+    display: grid;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 900;
 }
 
 .eyebrow {
@@ -75,6 +94,7 @@ button {
 
 .course-input-panel,
 .course-report,
+.user-review-section,
 .loading,
 .error {
     border: 1px solid var(--line);
@@ -94,7 +114,8 @@ button {
     gap: 16px;
 }
 
-.course-form label {
+.course-form label,
+.user-review-form label {
     display: grid;
     gap: 7px;
     color: var(--muted);
@@ -104,7 +125,13 @@ button {
 
 .course-form input,
 .course-form select,
-.course-form textarea {
+.course-form textarea,
+.user-review-form input,
+.user-review-form select,
+.user-review-form textarea,
+.login-form input,
+.course-search-form input,
+.course-search-form select {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--line);
@@ -121,7 +148,13 @@ button {
 
 .course-form input:focus,
 .course-form select:focus,
-.course-form textarea:focus {
+.course-form textarea:focus,
+.user-review-form input:focus,
+.user-review-form select:focus,
+.user-review-form textarea:focus,
+.login-form input:focus,
+.course-search-form input:focus,
+.course-search-form select:focus {
     outline: 3px solid rgba(15, 118, 110, 0.18);
     border-color: var(--accent);
 }
@@ -168,9 +201,267 @@ button {
     color: var(--accent-strong);
 }
 
+.user-review-section {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.section-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.mini-label {
+    margin: 0 0 2px;
+    color: var(--accent-strong);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.section-title-row h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+
+.section-title-row span {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    border-radius: 999px;
+    color: var(--accent-strong);
+    background: #e6f5f3;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.review-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.review-stats div {
+    display: grid;
+    gap: 2px;
+    min-height: 78px;
+    padding: 12px;
+    border: 1px solid #d8e7e4;
+    border-radius: 8px;
+    background: #f0fdfa;
+}
+
+.review-stats span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.review-stats strong {
+    color: var(--accent-strong);
+    font-size: 1.35rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.user-review-form {
+    display: grid;
+    gap: 12px;
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.user-review-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.review-status {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--accent-strong);
+    background: #e6f5f3;
+    font-weight: 800;
+}
+
+.review-status.is-error {
+    color: var(--danger);
+    background: #fff6f5;
+}
+
+.review-status[hidden] {
+    display: none;
+}
+
+.user-review-list {
+    display: grid;
+    gap: 10px;
+}
+
+.user-review-item,
+.empty-reviews {
+    margin: 0;
+    padding: 12px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.user-review-item {
+    display: grid;
+    gap: 6px;
+}
+
+.user-review-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.user-review-head strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.user-review-head span {
+    flex: 0 0 auto;
+    color: #d97706;
+    font-size: 0.9rem;
+    letter-spacing: 0;
+}
+
+.user-review-item p {
+    margin: 0;
+    color: #33414b;
+}
+
+.user-review-item p:first-of-type,
+.empty-reviews {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
 .course-result-panel {
     display: grid;
     gap: 14px;
+}
+
+.course-tools {
+    display: grid;
+    gap: 14px;
+}
+
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.tool-panel {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--shadow);
+}
+
+.course-search-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(120px, 150px) minmax(120px, 150px) minmax(120px, 150px) auto;
+    gap: 10px;
+}
+
+.compact-button {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.86rem;
+}
+
+.course-card-list,
+.compare-list,
+.compare-results {
+    display: grid;
+    gap: 10px;
+}
+
+.compact-list {
+    max-height: 320px;
+    overflow: auto;
+}
+
+.course-card,
+.compare-row,
+.compare-result-row {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    background: var(--surface-muted);
+}
+
+.course-card-title {
+    width: 100%;
+    padding: 0;
+    border: none;
+    color: var(--accent-strong);
+    background: transparent;
+    font-weight: 900;
+    text-align: left;
+}
+
+.course-card p,
+.compare-result-row {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.compare-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+}
+
+.compare-row span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: #33414b;
+    font-weight: 800;
+}
+
+.compare-row button,
+.review-actions button {
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    background: var(--surface);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.review-actions button:hover,
+.compare-row button:hover {
+    border-color: var(--accent);
+    color: var(--accent-strong);
 }
 
 .loading,
@@ -459,11 +750,22 @@ button {
     .course-input-panel {
         position: static;
     }
+
+    .course-search-form,
+    .tool-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 720px) {
     .topbar {
+        align-items: stretch;
+        flex-direction: column;
         padding: 22px 16px 14px;
+    }
+
+    .login-form {
+        grid-template-columns: 1fr;
     }
 
     .app-shell {
@@ -472,6 +774,8 @@ button {
 
     .form-grid,
     .course-grid,
+    .review-grid,
+    .review-stats,
     .button-row,
     .meter-grid,
     .list-panels {
