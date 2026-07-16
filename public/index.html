@@ -21,6 +21,12 @@
         </form>
     </header>
 
+    <nav class="app-tabs" aria-label="表示切替">
+        <button class="app-tab is-active" type="button" data-view-target="analysis" aria-pressed="true">講義レビュー</button>
+        <button class="app-tab" type="button" data-view-target="reviews" aria-pressed="false">口コミ</button>
+        <button class="app-tab" type="button" data-view-target="search" aria-pressed="false">講義検索</button>
+    </nav>
+
     <main class="app-shell course-app">
         <section class="course-input-panel">
             <form id="courseForm" class="course-form">
@@ -68,7 +74,7 @@
             <div class="loading" id="loading" hidden>LLMがシラバスと口コミを分析しています</div>
             <div class="error" id="errorMessage" hidden></div>
 
-            <section class="course-tools">
+            <section class="course-tools view-panel is-view-hidden" data-view="search">
                 <div class="tool-panel">
                     <div class="section-title-row">
                         <div>
@@ -129,7 +135,7 @@
                 </div>
             </section>
 
-            <section class="search-candidate-panel" id="searchCandidatePanel" hidden>
+            <section class="search-candidate-panel view-panel" id="searchCandidatePanel" data-view="analysis" hidden>
                 <div class="section-title-row">
                     <div>
                         <p class="mini-label">SOURCE SELECT</p>
@@ -141,7 +147,7 @@
                 <div id="searchCandidateList" class="search-candidate-list"></div>
             </section>
 
-            <section class="user-review-section">
+            <section class="user-review-section view-panel is-view-hidden" data-view="reviews">
                 <div class="section-title-row">
                     <div>
                         <p class="mini-label">USER REVIEWS</p>
@@ -244,7 +250,7 @@
                 <div class="user-review-list" id="userReviewList"></div>
             </section>
 
-            <article class="course-report" aria-live="polite">
+            <article class="course-report view-panel" data-view="analysis" aria-live="polite">
                 <div class="report-header">
                     <div>
                         <p class="report-label">COURSE REVIEW</p>
@@ -351,6 +357,8 @@
         const compareResults = document.getElementById('compareResults');
         const searchCandidatePanel = document.getElementById('searchCandidatePanel');
         const searchCandidateList = document.getElementById('searchCandidateList');
+        const viewTabs = Array.from(document.querySelectorAll('[data-view-target]'));
+        const viewPanels = Array.from(document.querySelectorAll('[data-view]'));
 
         const resultCourseName = document.getElementById('resultCourseName');
         const overallScore = document.getElementById('overallScore');
@@ -441,9 +449,24 @@
 
         recommendButton.addEventListener('click', loadRecommendations);
         compareButton.addEventListener('click', compareSelectedCourses);
+        viewTabs.forEach((tab) => {
+            tab.addEventListener('click', () => switchView(tab.dataset.viewTarget));
+        });
 
         document.getElementById('courseNameInput').addEventListener('change', loadUserReviews);
         document.getElementById('schoolNameInput').addEventListener('change', loadUserReviews);
+
+        function switchView(viewName) {
+            viewTabs.forEach((tab) => {
+                const isActive = tab.dataset.viewTarget === viewName;
+                tab.classList.toggle('is-active', isActive);
+                tab.setAttribute('aria-pressed', String(isActive));
+            });
+
+            viewPanels.forEach((panel) => {
+                panel.classList.toggle('is-view-hidden', panel.dataset.view !== viewName);
+            });
+        }
 
         async function analyzeCourse({ useSearch, selectedSearchReviews = [] }) {
             const courseName = document.getElementById('courseNameInput').value.trim();
@@ -503,6 +526,7 @@
                 renderReport(parsed[0]);
                 renderSources(searchReviewsList);
                 renderUserReviews(savedReviews, savedReviewPayload.stats);
+                switchView('analysis');
             } catch (error) {
                 showError(error.message || '分析に失敗しました。出典やAPI設定を確認してください。');
             } finally {
@@ -546,6 +570,7 @@
             try {
                 searchCandidateReviews = await searchReviews(courseName, schoolName);
                 renderSearchCandidates(searchCandidateReviews);
+                switchView('analysis');
                 if (searchCandidateReviews.length === 0) {
                     showError('検索候補が見つかりませんでした。本文を貼り付けて分析してください。');
                 }
@@ -674,6 +699,7 @@
                 await loadUserReviews();
                 await loadCourses();
                 await loadRecommendations();
+                switchView('reviews');
             } catch (error) {
                 showReviewStatus(error.message || '口コミを保存できませんでした。', true);
             }
@@ -906,6 +932,7 @@
             document.getElementById('schoolNameInput').value = course.schoolName || '';
             resultCourseName.textContent = course.courseName || sampleResult.courseName;
             await loadUserReviews();
+            switchView('reviews');
         }
 
         function addCompareCourse(course) {
